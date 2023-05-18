@@ -5,7 +5,7 @@
 
 # #### Importing Modules
 
-# In[1]:
+# In[57]:
 
 
 import numpy as np
@@ -24,6 +24,8 @@ from nltk.stem import SnowballStemmer
 from nltk import pos_tag
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
+from nltk.util import ngrams
+from collections import Counter
 
 from wordcloud import WordCloud
 from tqdm.auto import tqdm
@@ -267,6 +269,107 @@ plt.yticks(fontsize=30, rotation=0)
 plt.xlabel('User followers in Thousands', fontsize = 21)
 plt.ylabel('')
 plt.title('Followers', fontsize = 30);
+
+
+# ## N-Gram Analysis
+
+# In[62]:
+
+
+def textNgrams(text, size):
+    ngrams_all = []
+    for string in text:
+        tokens = string.split()
+        if len(tokens) <= size:
+            continue
+        else:
+            output = list(ngrams(tokens, size))
+        for ngram in output:
+            ngrams_all.append(" ".join(ngram))
+    cnt_ngram = Counter()
+    for word in ngrams_all:
+        cnt_ngram[word] += 1
+    df_Ngms = pd.DataFrame.from_dict(cnt_ngram, orient='index').reset_index()
+    df_Ngms = df_Ngms.rename(columns={'index':'words', 0:'count'})
+    df_Ngms = df_Ngms.sort_values(by='count', ascending=False)
+    df_Ngms = df_Ngms.head(10)
+    df_Ngms = df_Ngms.sort_values(by='count')
+    
+    return(df_Ngms)
+
+
+# In[63]:
+
+
+def plotNgrams(text):
+    bigrams = documentNgrams(text, 2)
+    trigrams = documentNgrams(text, 3)
+    
+    # Set plot figure size
+    fig = plt.figure(figsize = (20, 7))
+    plt.subplots_adjust(wspace=.5)
+
+    ax2 = fig.add_subplot(132)
+    ax2.barh(np.arange(len(bigrams['words'])), bigrams['count'], align='center', alpha=.5)
+    ax2.set_title('Bigrams')
+    plt.yticks(np.arange(len(bigrams['words'])), bigrams['words'])
+    plt.xlabel('Count')
+
+    ax3 = fig.add_subplot(133)
+    ax3.barh(np.arange(len(trigrams['words'])), trigrams['count'], align='center', alpha=.5)
+    ax3.set_title('Trigrams')
+    plt.yticks(np.arange(len(trigrams['words'])), trigrams['words'])
+    plt.xlabel('Count')
+
+    plt.show()
+
+
+# In[64]:
+
+
+def textTrends(text):
+    plotNgrams(text)
+
+
+# In[65]:
+
+
+textTrends(df["clean_text"])
+
+
+# ### Sentiment Analysis
+
+# In[66]:
+
+
+from textblob import TextBlob
+
+
+# In[69]:
+
+
+df_Copy = df
+
+
+# In[71]:
+
+
+df_Copy['polarity'] = df.clean_text.apply(lambda x: TextBlob(x).polarity)
+df_Copy['subjectivity'] = df.clean_text.apply(lambda x: TextBlob(x).subjectivity)
+
+
+# In[72]:
+
+
+df_Copy.head()
+
+
+# In[73]:
+
+
+df['sentiment'] = np.where(df_Copy.polarity >= 0.05, 'Positive', 
+                                 np.where(df_Copy.polarity <= 0.05, 'Negative', 'Neutral'))
+df.head()
 
 
 # # TF/IDF
