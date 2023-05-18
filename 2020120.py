@@ -441,11 +441,11 @@ df.head(1)
 from sklearn.feature_extraction.text import CountVectorizer
 
 
-# In[51]:
+# In[38]:
 
 
 count_vectorizer = CountVectorizer()
-text_cv=count_vectorizer.fit_transform([" ".join(text) for text in df['text']])
+count_vectorizer.fit(df['text'])
 count_vectorizer.vocabulary_
 
 
@@ -467,20 +467,14 @@ tfidf_vectorizer.vocabulary_
 
 # ### 3. Word2Vec
 
-# In[ ]:
-
-
-
-
-
-# In[43]:
+# In[41]:
 
 
 import gensim
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 
 
-# In[44]:
+# In[42]:
 
 
 #for textblob dataframe and vader dataframe
@@ -488,7 +482,7 @@ tagged_text = [TaggedDocument(words=text, tags=[str(i)]) for i, text in enumerat
 w2v_model = Doc2Vec(tagged_text, min_count=4, vector_size=100)
 
 
-# In[45]:
+# In[43]:
 
 
 textblob_text_vectors=[w2v_model.infer_vector(text) for text in df['clean_text']]
@@ -496,7 +490,7 @@ textblob_text_vectors=[w2v_model.infer_vector(text) for text in df['clean_text']
 
 # ## Model Building
 
-# In[46]:
+# In[44]:
 
 
 from sklearn.naive_bayes import MultinomialNB
@@ -506,13 +500,14 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from scipy.sparse import csr_matrix
 
 
-# In[48]:
+# In[45]:
 
 
-RF_model = RandomForestClassifier(n_estimators=100,max_depth=5)
+models = {'RandomForestClassifier': RandomForestClassifier(n_estimators=100,max_depth=5),
+          'MultinomialNB': MultinomialNB()}
 
 
-# In[ ]:
+# In[46]:
 
 
 model_classifier=[]
@@ -535,4 +530,10 @@ for vectorizer,v in collection_df.items():
             Recall.append(round(recall_score(y_test, y_pred, average='weighted'),4))
             F1_SCORE.append(round(f1_score(y_test, y_pred, average='weighted'),4))
             print("Done: "+vectorizer+"+"+sentimenter+"+"+name,"Accuracy: "+str(accuracy_score(y_test, y_pred)))
+
+
+# In[ ]:
+
+
+
 
