@@ -57,6 +57,14 @@ df['user_followers'] = pd.to_numeric(df['user_followers'], errors='coerce')
 # Just converts all str types in the column to int so that comparison operator can be used
 
 
+# In[53]:
+
+
+df = df.drop_duplicates(keep='first')
+
+# Removes duplicate rows as per instructions
+
+
 # #### Checking Dataset
 
 # In[14]:
@@ -75,6 +83,14 @@ print ("\nUnique values :  \n",df.nunique())
 
 
 (df.isnull().sum() / len(df)) * 100
+
+
+# In[56]:
+
+
+df = df.drop(['user_location', 'hashtags', 'user_description'], axis=1)
+
+# Dropping rows with missing values as per instructions
 
 
 # #### Filling NaN Values
@@ -251,141 +267,6 @@ plt.yticks(fontsize=30, rotation=0)
 plt.xlabel('User followers in Thousands', fontsize = 21)
 plt.ylabel('')
 plt.title('Followers', fontsize = 30);
-
-
-# In[27]:
-
-
-import gensim
-from gensim.utils import simple_preprocess
-from gensim.parsing.preprocessing import STOPWORDS
-from nltk.stem import WordNetLemmatizer, SnowballStemmer
-from nltk.stem.porter import *
-import numpy as np
-np.random.seed(2018)
-import nltk
-
-
-# In[28]:
-
-
-stemmer = SnowballStemmer('english')
-
-
-# In[29]:
-
-
-nltk.download('wordnet')
-
-
-# In[30]:
-
-
-#Code by Leon Wolber https://www.kaggle.com/leonwolber/reddit-nlp-topic-modeling-prediction
-
-def lemmatize_stemming(text):
-    return stemmer.stem(WordNetLemmatizer().lemmatize(text, pos='v'))
-
-def preprocess(text):
-    result = []
-    for token in gensim.utils.simple_preprocess(text):
-        if token not in gensim.parsing.preprocessing.STOPWORDS and len(token) > 3:
-            result.append(lemmatize_stemming(token))
-    return result
-
-
-# In[31]:
-
-
-df['text'].iloc[2]
-
-
-# In[32]:
-
-
-import nltk
-nltk.download('omw-1.4')
-
-
-# In[33]:
-
-
-doc_sample = df['text'].iloc[1]
-print('original document: ')
-
-words = []
-
-for word in doc_sample.split(' '):
-    words.append(word)
-    
-    
-print(words)
-print('\n\n tokenized and lemmatized document: ')
-print(preprocess(doc_sample))
-
-
-# In[34]:
-
-
-df['clean_text'] = df['clean_text'].astype(str)
-
-
-# In[35]:
-
-
-#Code by Leon Wolber https://www.kaggle.com/leonwolber/reddit-nlp-topic-modeling-prediction
-
-words = []
-
-for i in df['clean_text']:
-        words.append(i.split(' '))
-
-
-# # Create the dictionary
-# 
-# Every unique word in texts
-
-# In[37]:
-
-
-dictionary = gensim.corpora.Dictionary(words)
-
-count = 0
-for k, v in dictionary.iteritems():
-    print(k, v)
-    count += 1
-    if count > 10:
-        break
-
-
-# In[38]:
-
-
-# Filter out tokens in the dictionary by their frequency.
-
-dictionary.filter_extremes(no_below=15, no_above=0.5, keep_n=100000)
-
-
-# # Create Corpus -> term document frequency
-# 
-# doc2bow() simply counts the number of occurrences of each distinct word, converts the word to its integer word ID and returns the result as a sparse vector.
-
-# In[40]:
-
-
-bow_corpus = [dictionary.doc2bow(doc) for doc in words]
-bow_corpus[324]
-
-
-# In[42]:
-
-
-bow_doc_324 = bow_corpus[324]
-
-for i in range(len(bow_doc_324)):
-    print("Word {} (\"{}\") appears {} time.".format(bow_doc_324[i][0], 
-                                               dictionary[bow_doc_324[i][0]], 
-bow_doc_324[i][1]))
 
 
 # # TF/IDF
