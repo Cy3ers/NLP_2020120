@@ -441,11 +441,11 @@ df.head(1)
 from sklearn.feature_extraction.text import CountVectorizer
 
 
-# In[38]:
+# In[51]:
 
 
 count_vectorizer = CountVectorizer()
-count_vectorizer.fit(df['text'])
+text_cv=count_vectorizer.fit_transform([" ".join(text) for text in df['text']])
 count_vectorizer.vocabulary_
 
 
@@ -463,4 +463,76 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 tfidf_vectorizer = TfidfVectorizer()
 tfidf_vectorizer.fit(df['text'])
 tfidf_vectorizer.vocabulary_
+
+
+# ### 3. Word2Vec
+
+# In[ ]:
+
+
+
+
+
+# In[43]:
+
+
+import gensim
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+
+
+# In[44]:
+
+
+#for textblob dataframe and vader dataframe
+tagged_text = [TaggedDocument(words=text, tags=[str(i)]) for i, text in enumerate(df['text'])]
+w2v_model = Doc2Vec(tagged_text, min_count=4, vector_size=100)
+
+
+# In[45]:
+
+
+textblob_text_vectors=[w2v_model.infer_vector(text) for text in df['clean_text']]
+
+
+# ## Model Building
+
+# In[46]:
+
+
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from scipy.sparse import csr_matrix
+
+
+# In[48]:
+
+
+RF_model = RandomForestClassifier(n_estimators=100,max_depth=5)
+
+
+# In[ ]:
+
+
+model_classifier=[]
+Accuracy=[]
+Precision=[]
+Recall=[]
+F1_SCORE=[]
+
+for vectorizer,v in collection_df.items():
+    for sentimenter,v in v.items():
+        X=collection_df[vectorizer][sentimenter]['X']
+        y=collection_df[vectorizer][sentimenter]['y']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        for name, model in models.items():
+            model_classifier.append(vectorizer+"+"+sentimenter+"+"+name)
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            Accuracy.append(round(accuracy_score(y_test, y_pred),4))
+            Precision.append(round(precision_score(y_test, y_pred, average='weighted',zero_division=1),4))
+            Recall.append(round(recall_score(y_test, y_pred, average='weighted'),4))
+            F1_SCORE.append(round(f1_score(y_test, y_pred, average='weighted'),4))
+            print("Done: "+vectorizer+"+"+sentimenter+"+"+name,"Accuracy: "+str(accuracy_score(y_test, y_pred)))
 
