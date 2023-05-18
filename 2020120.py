@@ -431,4 +431,36 @@ df['char_count'] = df['text'].str.len()
 df.head(1)
 
 
-# # TF/IDF
+# # Vectorization
+
+# ### 1. Count Vectorizer
+
+# In[37]:
+
+
+from sklearn.feature_extraction.text import CountVectorizer
+
+
+# In[38]:
+
+
+count_vectorizer = CountVectorizer()
+count_vectorizer.fit(df['text'])
+count_vectorizer.vocabulary_
+
+
+# ### 2. TD/IDF
+
+# In[39]:
+
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+
+# In[40]:
+
+
+tfidf_vectorizer = TfidfVectorizer()
+tfidf_vectorizer.fit(df['text'])
+tfidf_vectorizer.vocabulary_
+
