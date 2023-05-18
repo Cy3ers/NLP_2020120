@@ -5,7 +5,7 @@
 
 # #### Importing Modules
 
-# In[57]:
+# In[1]:
 
 
 import numpy as np
@@ -45,13 +45,13 @@ df = pd.read_csv('tweets.csv', encoding='utf8')
 df = df.head(500)
 
 
-# In[4]:
+# In[3]:
 
 
 df.head()
 
 
-# In[12]:
+# In[4]:
 
 
 df['user_followers'] = pd.to_numeric(df['user_followers'], errors='coerce')
@@ -59,7 +59,7 @@ df['user_followers'] = pd.to_numeric(df['user_followers'], errors='coerce')
 # Just converts all str types in the column to int so that comparison operator can be used
 
 
-# In[53]:
+# In[5]:
 
 
 df = df.drop_duplicates(keep='first')
@@ -69,7 +69,7 @@ df = df.drop_duplicates(keep='first')
 
 # #### Checking Dataset
 
-# In[14]:
+# In[6]:
 
 
 print ("Rows     : " ,df.shape[0])
@@ -81,13 +81,13 @@ print ("\nUnique values :  \n",df.nunique())
 
 # ##### Percentages of missing values per column
 
-# In[15]:
+# In[7]:
 
 
 (df.isnull().sum() / len(df)) * 100
 
 
-# In[56]:
+# In[8]:
 
 
 df = df.drop(['user_location', 'hashtags', 'user_description'], axis=1)
@@ -99,7 +99,7 @@ df = df.drop(['user_location', 'hashtags', 'user_description'], axis=1)
 df = df.dropna() # Not needed yetdf.head(2)
 # #### Checking some features
 
-# In[16]:
+# In[9]:
 
 
 print(len(df[df['user_followers'] < 1000]), 'users with less than 1000 followers')
@@ -108,7 +108,7 @@ print(len(df[df['user_followers'] > 1000]), 'users with more than 1000 followers
 
 # ### Cleaning functions
 
-# In[17]:
+# In[10]:
 
 
 def remove_line_breaks(text):
@@ -191,7 +191,7 @@ def clean_text(text):
     return text
 
 
-# In[18]:
+# In[11]:
 
 
 # This was so that TQDM does not give AttributeError
@@ -202,19 +202,19 @@ df["text"] = [x.replace(':',' ') for x in df["text"]]
 
 # ### Running text cleaner and storing in new column
 
-# In[19]:
+# In[12]:
 
 
 df['clean_text'] = pd.Series([clean_text(i) for i in tqdm(df['text'])])
 
 
-# In[20]:
+# In[13]:
 
 
 words = df["clean_text"].values
 
 
-# In[21]:
+# In[14]:
 
 
 ls = []
@@ -223,7 +223,7 @@ for i in words:
     ls.append(str(i))
 
 
-# In[22]:
+# In[15]:
 
 
 ls[:5]
@@ -231,7 +231,7 @@ ls[:5]
 
 # ### Wordcloud 
 
-# In[23]:
+# In[16]:
 
 
 plt.figure(figsize=(16,13))
@@ -244,7 +244,7 @@ plt.axis('off')
 
 # Trying some Features
 
-# In[24]:
+# In[17]:
 
 
 most_pop = df.sort_values('user_followers', ascending =False)[['user_name', 'user_followers']].head(12)
@@ -252,13 +252,13 @@ most_pop = df.sort_values('user_followers', ascending =False)[['user_name', 'use
 most_pop['user_followers1'] = most_pop['user_followers']/1000
 
 
-# In[25]:
+# In[18]:
 
 
 most_pop
 
 
-# In[26]:
+# In[19]:
 
 
 plt.figure(figsize = (20,25))
@@ -273,7 +273,7 @@ plt.title('Followers', fontsize = 30);
 
 # ## N-Gram Analysis
 
-# In[62]:
+# In[20]:
 
 
 def textNgrams(text, size):
@@ -298,12 +298,12 @@ def textNgrams(text, size):
     return(df_Ngms)
 
 
-# In[63]:
+# In[21]:
 
 
 def plotNgrams(text):
-    bigrams = documentNgrams(text, 2)
-    trigrams = documentNgrams(text, 3)
+    bigrams = textNgrams(text, 2)
+    trigrams = textNgrams(text, 3)
     
     # Set plot figure size
     fig = plt.figure(figsize = (20, 7))
@@ -324,14 +324,14 @@ def plotNgrams(text):
     plt.show()
 
 
-# In[64]:
+# In[22]:
 
 
 def textTrends(text):
     plotNgrams(text)
 
 
-# In[65]:
+# In[23]:
 
 
 textTrends(df["clean_text"])
@@ -339,102 +339,96 @@ textTrends(df["clean_text"])
 
 # ### Sentiment Analysis
 
-# In[66]:
+# In[24]:
 
 
 from textblob import TextBlob
 
 
-# In[69]:
+# In[25]:
 
 
 df_Copy = df
 
 
-# In[71]:
+# In[26]:
 
 
 df_Copy['polarity'] = df.clean_text.apply(lambda x: TextBlob(x).polarity)
 df_Copy['subjectivity'] = df.clean_text.apply(lambda x: TextBlob(x).subjectivity)
 
 
-# In[72]:
-
-
-df_Copy.head()
-
-
-# In[73]:
+# In[27]:
 
 
 df['sentiment'] = np.where(df_Copy.polarity >= 0.05, 'Positive', 
                                  np.where(df_Copy.polarity <= 0.05, 'Negative', 'Neutral'))
+
+
+# In[28]:
+
+
 df.head()
 
 
+# ### Feature Engineering
+
+# Sentence Length
+
+# In[29]:
+
+
+df['sent_length'] = df['text'].apply(
+    lambda row: min(len(row.split(" ")), len(row)) if isinstance(row, str) else None
+)
+
+
+# In[30]:
+
+
+df.head(1)
+
+
+# Number of words in a text
+
+# In[31]:
+
+
+df['word_count'] = df['text'].str.split().str.len()
+
+
+# In[32]:
+
+
+df.head(1)
+
+
+# Number of spaces
+
+# In[33]:
+
+
+df['space_count'] = df['text'].str.count(' ')
+
+
+# In[34]:
+
+
+df.head(1)
+
+
+# Number of characters
+
+# In[35]:
+
+
+df['char_count'] = df['text'].str.len()
+
+
+# In[36]:
+
+
+df.head(1)
+
+
 # # TF/IDF
-
-# In[44]:
-
-
-from gensim import corpora, models
-
-tfidf = models.TfidfModel(bow_corpus)
-corpus_tfidf = tfidf[bow_corpus]
-
-from pprint import pprint
-
-for doc in corpus_tfidf:
-    pprint(doc)
-    break
-
-
-# In[45]:
-
-
-lda_model = gensim.models.LdaMulticore(bow_corpus,
-                                       num_topics=10,
-                                       id2word=dictionary,
-                                       passes=2,
-                                       workers=2)
-
-
-# # Showing the output of the model
-
-# In[46]:
-
-
-for idx, topic in lda_model.print_topics(-1):
-    print('Topic: {} \nWords: {}'.format(idx, topic))
-
-
-# In[47]:
-
-
-lda_model_tfidf = gensim.models.LdaMulticore(corpus_tfidf,
-                                             num_topics=10,
-                                             id2word=dictionary,
-                                             passes=2,
-                                             workers=4)
-
-for idx, topic in lda_model_tfidf.print_topics(-1):
-    print('Topic: {} Word: {}'.format(idx, topic))
-
-
-# In[48]:
-
-
-#39049th row, 2nd column 
-
-df.iloc[234,1]
-
-
-# In[49]:
-
-
-unseen_document = 'so happy for the chatGPT team for com8ng up with such a revolutionary idea.The FUTURE LOOKS BRIGHT.'
-bow_vector = dictionary.doc2bow(preprocess(unseen_document))
-
-for index, score in sorted(lda_model[bow_vector], key=lambda tup: -1*tup[1]):
-    print("Score: {}\t Topic: {}".format(score, lda_model.print_topic(index, 5)))
-
